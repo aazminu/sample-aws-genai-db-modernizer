@@ -493,6 +493,7 @@ class LocalOrchestrator(Orchestrator):
         all_routings: list = []
         all_terminal: list[str] = []
         all_held: list[str] = []
+        all_terminal_records: list = []
         max_depth = 2
 
         for depth in range(max_depth + 1):
@@ -576,6 +577,11 @@ class LocalOrchestrator(Orchestrator):
             all_routings.extend(router_output.routings)
             all_terminal.extend(q for q in router_output.terminal_queries if q not in all_terminal)
             all_held.extend(q for q in router_output.held_queries if q not in all_held)
+            # #888: each terminal query once, with the flag that made it terminal.
+            recorded = {t.query_id for t in all_terminal_records}
+            all_terminal_records.extend(
+                t for t in router_output.terminal if t.query_id not in recorded
+            )
             prefix_router = f"{database_name}/{job_id}/post-schema-router"
             self.store.write_json(
                 f"{prefix_router}/pass-{depth}/router_output.json",
@@ -586,6 +592,7 @@ class LocalOrchestrator(Orchestrator):
                     "routings": list(all_routings),
                     "terminal_queries": list(all_terminal),
                     "held_queries": list(all_held),
+                    "terminal": list(all_terminal_records),
                 }
             )
             self.store.write_json(

@@ -179,7 +179,8 @@ class TestMigrationWaves:
         # facts.resolved_risks_by_severity added
         # #746: facts.unreviewed_move_count added
         # #992: table_sources and facts.table_sources added (1.32)
-        assert report["contract_version"] == "1.33"
+        # #888: flagged_unservable added (1.34)
+        assert report["contract_version"] == "1.34"
         assert len(report["migration_waves"]) == 3
         assert report["migration_waves"][2]["engines"] == ["dynamodb"]
 

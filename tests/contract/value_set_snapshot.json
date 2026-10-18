@@ -715,7 +715,7 @@
       "group_mean",
       "query"
     ],
-    "version": "1.33"
+    "version": "1.34"
   },
   "referee_output.ArchitectureType": {
     "module": "referee_output",
