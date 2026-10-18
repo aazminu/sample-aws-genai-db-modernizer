@@ -14196,6 +14196,47 @@
           "type": "string"
         }
       },
+      "held": {
+        "required": false,
+        "schema": {
+          "items": {
+            "kind": "object",
+            "properties": {
+              "flagged_engine": {
+                "required": true,
+                "schema": {
+                  "kind": "scalar",
+                  "type": "string"
+                }
+              },
+              "query_id": {
+                "required": true,
+                "schema": {
+                  "kind": "scalar",
+                  "type": "string"
+                }
+              },
+              "reason_category": {
+                "required": false,
+                "schema": {
+                  "kind": "anyOf",
+                  "members": [
+                    {
+                      "kind": "scalar",
+                      "type": "null"
+                    },
+                    {
+                      "kind": "scalar",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "kind": "array"
+        }
+      },
       "held_queries": {
         "required": false,
         "schema": {
@@ -14706,8 +14747,8 @@
         }
       }
     },
-    "schema_hash": "ed1d07a514bbcbf6004eb61874d4d398425bdcf89274eeb89b78d619840311cf",
-    "version": "1.3"
+    "schema_hash": "f477c5f429ba9a857a3f34931bdc2c25982e1c037abd193f5ebbf77fa83ff581",
+    "version": "1.4"
   },
   "reality_check_model_response.RealityCheckModelResponse": {
     "fields": {
@@ -19000,6 +19041,14 @@
                               "type": "integer"
                             }
                           },
+                          "held_query_count": {
+                            "required": false,
+                            "schema": {
+                              "kind": "scalar",
+                              "minimum": 0,
+                              "type": "integer"
+                            }
+                          },
                           "more_unservable_count": {
                             "required": false,
                             "schema": {
@@ -19400,6 +19449,7 @@
                   "kind": "enum",
                   "values": [
                     "depth_limit",
+                    "held_by_pin",
                     "no_kept_engine"
                   ]
                 }
@@ -22730,8 +22780,8 @@
         }
       }
     },
-    "schema_hash": "3c7679a8faebf45283d4fcbf22359758fe64e19971aa9ba57156b30798139b30",
-    "version": "1.34"
+    "schema_hash": "2ec676b1927aa149a0d22534b8a05c4e9bb904378ea5fa2b59ad6777969d27c0",
+    "version": "1.36"
   },
   "triage_output.TriageOutputContract": {
     "fields": {

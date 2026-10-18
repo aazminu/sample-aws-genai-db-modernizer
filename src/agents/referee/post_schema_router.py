@@ -33,7 +33,12 @@ from src.agents.referee.query_scoring import ScoringContext
 from src.agents.referee.tie_break import group_tie
 from src.contracts.model_flag import FlagReason, ModelFlag
 from src.contracts.move_ledger import MoveEvidence
-from src.contracts.post_schema_router_output import QueryRouting, RouterOutput, TerminalQuery
+from src.contracts.post_schema_router_output import (
+    HeldQuery,
+    QueryRouting,
+    RouterOutput,
+    TerminalQuery,
+)
 from src.shared.engine_names import display_engine
 
 logger = logging.getLogger(__name__)
@@ -121,6 +126,14 @@ def _terminal(
     ]
 
 
+def _held(members: list[str], engine: str, flag: ModelFlag) -> list[HeldQuery]:
+    """The ``RouterOutput.held`` records of a unit a customer pin keeps on ``engine`` (#1033)."""
+    return [
+        HeldQuery(query_id=m, flagged_engine=engine, reason_category=flag.reason_category.value)
+        for m in members
+    ]
+
+
 def _fmt(value: float | None) -> str:
     return "n/a" if value is None else f"{value:g}"
 
@@ -203,6 +216,7 @@ def route_unsupported_queries(
     routings: list[QueryRouting] = []
     terminal: list[TerminalQuery] = []
     held: list[str] = []
+    held_records: list[HeldQuery] = []
     # query -> the other writes of the tables it writes (#992).
     write_mates: dict[str, set[str]] = defaultdict(set)
     for members in (write_groups or {}).values():
@@ -275,6 +289,7 @@ def route_unsupported_queries(
                 len(members),
             )
             held.extend(m for m in members if m not in held)
+            held_records.extend(_held(members, engine, flag))
             continue
         if cascade_depth >= max_depth:
             terminal.extend(_terminal(members, engine, flag, "depth_limit"))
@@ -345,5 +360,6 @@ def route_unsupported_queries(
         terminal_queries=[t.query_id for t in terminal],
         terminal=terminal,
         held_queries=held,
+        held=held_records,
         cascade_depth=cascade_depth,
     )

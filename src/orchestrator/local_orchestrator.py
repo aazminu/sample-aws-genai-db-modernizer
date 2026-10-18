@@ -13,10 +13,7 @@ import logging
 from datetime import UTC, datetime
 
 from src.agents.referee.query_pattern import write_access_patterns
-from src.agents.referee.write_groups import (
-    assignment_placement_groups,
-    assignment_unit_weights,
-)
+from src.agents.referee.write_groups import assignment_placement_groups, assignment_unit_weights
 from src.contracts.phase_models import (
     PHASE_PREREQUISITES,
     SCHEMA_DESIGN_SKIP_REASON_NO_LLM,
@@ -427,8 +424,7 @@ class LocalOrchestrator(Orchestrator):
 
         for engine in engines:
             schema_key = (
-                f"{database_name}/{job_id}/schema-{engine}"
-                f"/v{assignment_version}/schema_output.json"
+                f"{database_name}/{job_id}/schema-{engine}/v{assignment_version}/schema_output.json"
             )
             if not self.store.exists(schema_key):
                 logger.info("Skipping load test for %s — schema output not found", engine)
@@ -494,6 +490,7 @@ class LocalOrchestrator(Orchestrator):
         all_terminal: list[str] = []
         all_held: list[str] = []
         all_terminal_records: list = []
+        all_held_records: list = []
         max_depth = 2
 
         for depth in range(max_depth + 1):
@@ -582,6 +579,11 @@ class LocalOrchestrator(Orchestrator):
             all_terminal_records.extend(
                 t for t in router_output.terminal if t.query_id not in recorded
             )
+            # #1033: each held query once, with the flag it was held under.
+            held_recorded = {h.query_id for h in all_held_records}
+            all_held_records.extend(
+                h for h in router_output.held if h.query_id not in held_recorded
+            )
             prefix_router = f"{database_name}/{job_id}/post-schema-router"
             self.store.write_json(
                 f"{prefix_router}/pass-{depth}/router_output.json",
@@ -593,6 +595,7 @@ class LocalOrchestrator(Orchestrator):
                     "terminal_queries": list(all_terminal),
                     "held_queries": list(all_held),
                     "terminal": list(all_terminal_records),
+                    "held": list(all_held_records),
                 }
             )
             self.store.write_json(
