@@ -183,8 +183,15 @@ def test_every_open_risk_and_the_risk_counts(run: PipelineResult) -> None:
         assert f"Resolved by the assignment {sev}" in text  # the tile, "2 high, 4 medium"
         md = run.deliverable("engineering-report.md").read_text()
         assert f"({sev})" in md
+    low = int(facts["open_risks_by_severity"].get("LOW") or 0)
     for r in filtered_risks(report):
-        assert f"{r['risk_id']} · {r['severity']}" in text, r["risk_id"]
+        # #950: a low risk gets no card, only the one line pointing to the engineering report.
+        if r["severity"] == "LOW":
+            assert f"{r['risk_id']} · " not in text, r["risk_id"]
+        else:
+            assert f"{r['risk_id']} · {r['severity']}" in text, r["risk_id"]
+    if low:
+        assert " ".join(executive_report.low_risks_line(low).split()) in text
 
 
 def test_the_pending_engine_choices(run: PipelineResult) -> None:

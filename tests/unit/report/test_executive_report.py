@@ -377,8 +377,10 @@ def test_nothing_is_drawn_outside_the_page_and_nothing_is_cut(
     assert outside_the_page(data) == []
     text = body_text(data, rep["database_name"])
     assert "…" not in text and "..." not in text
-    for i in range(1, 25):
+    # #950: a low risk (every fourth here) gets no card, only the summary line.
+    for i in (i for i in range(1, 25) if i % 4 != 3):
         assert f"TAIL-{i}-A." in text and f"Mitigate risk {i} with care TAIL-{i}-M." in text
+    assert "TAIL-3-A." not in text and printed(executive_report.low_risks_line(6)) in text
     assert "END-OF-RISK." in text
     for w in rep["migration_waves"]:
         assert f"WAVE-{w['wave']}-WHY-END." in text
@@ -401,7 +403,7 @@ def test_a_card_moves_whole_to_the_next_page_when_it_fits_one(report: dict[str, 
     """Short cards are never split between two pages: each risk header and its text
     are on one page."""
     pages = page_texts(_render(_stress(report)))
-    for i in range(1, 25):
+    for i in (i for i in range(1, 25) if i % 4 != 3):  # #950: no card for a low risk
         on = [n for n, p in enumerate(pages) if f"RISK-{i:03d}" in p and "Risk" in p]
         tail = [n for n, p in enumerate(pages) if f"TAIL-{i}-M." in p]
         assert on and on == tail, (i, on, tail)

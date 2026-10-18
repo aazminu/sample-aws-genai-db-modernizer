@@ -21887,11 +21887,44 @@
                 "items": {
                   "kind": "object",
                   "properties": {
+                    "rule": {
+                      "required": false,
+                      "schema": {
+                        "kind": "anyOf",
+                        "members": [
+                          {
+                            "kind": "scalar",
+                            "type": "null"
+                          },
+                          {
+                            "kind": "scalar",
+                            "type": "string"
+                          }
+                        ]
+                      }
+                    },
                     "severity": {
                       "required": true,
                       "schema": {
                         "kind": "scalar",
                         "type": "string"
+                      }
+                    },
+                    "wave": {
+                      "required": false,
+                      "schema": {
+                        "kind": "anyOf",
+                        "members": [
+                          {
+                            "kind": "scalar",
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          {
+                            "kind": "scalar",
+                            "type": "null"
+                          }
+                        ]
                       }
                     }
                   }
@@ -22549,8 +22582,8 @@
         }
       }
     },
-    "schema_hash": "c26b28ebe4ff05df4c540fd260e2a0eb0a06fd8428d09791756f417a81747c0c",
-    "version": "1.33"
+    "schema_hash": "8439d9614121db30ca7ff5c885b99e2eca946c2905cfea1370e2f2452566dc64",
+    "version": "1.35"
   },
   "triage_output.TriageOutputContract": {
     "fields": {

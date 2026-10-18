@@ -2492,6 +2492,11 @@ const AnalysisResultsPage = memo(() => {
                                     {t('analysis-results.risk-assessment.resolved-reason', { reason: risk.reason })}
                                   </Box>
                                 )}
+                                {Array.isArray(risk.affected_tables) && risk.affected_tables.length > 0 && (
+                                  <Box fontSize="body-s" color="text-body-secondary">
+                                    {t('analysis-results.risk-assessment.affected-tables')}: {risk.affected_tables.join(', ')}
+                                  </Box>
+                                )}
                               </SpaceBetween>
                             </Box>
                           );

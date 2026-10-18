@@ -358,6 +358,16 @@ Version History:
   ``pending_choice_pairs``, ``auto_decided_choice_count``, ``auto_decided_query_count``
   and ``auto_decided_by_engine`` (``PendingChoicePair``, ``AutoDecidedEngine``). Backward compatible: None,
   0 or empty for a report synthesized before 1.33.
+- 1.35 (2026-10-18, #950, ADR-032): ``Risk.rule`` and ``Risk.wave``: the
+  migration risks synthesis now raises from the facts it already computes
+  (``src.agents.referee.migration_risks``: one sync risk and one close-call risk
+  per wave, open ties, queries no engine fits, dropped cache reads, the cache
+  layer's unsupported patterns, logic moved to the application, hot partitions
+  and one review risk per engine for its design trade-offs) carry the rule that
+  raised them (a key of ``migration_risks.RULES``) and the migration wave whose
+  gate they must clear. ``mitigation_strategies`` gains one line per wave naming
+  those risks. Backward compatible: both default to ``None``, the value every
+  risk written before 1.35 (and every analysis risk) reads back as.
 """
 
 from datetime import datetime
@@ -518,6 +528,16 @@ class Risk(BaseModel):
 
     severity: str = Field(..., description="LOW, MEDIUM, HIGH, CRITICAL")
     description: str = Field(...)
+    rule: str | None = Field(
+        None,
+        description=(
+            "The migration-risk rule that raised it (#950, a key of "
+            "src.agents.referee.migration_risks.RULES); None for an analysis risk"
+        ),
+    )
+    wave: int | None = Field(
+        None, ge=1, description="The migration wave whose gate it must clear (#950)"
+    )
 
     model_config = ConfigDict(extra="allow")
 
@@ -1395,7 +1415,7 @@ class SynthesisOutputContract(BaseModel):
     """
 
     contract_version: str = Field(
-        default="1.33",
+        default="1.35",
         pattern=r"^\d+\.\d+$",
         description="Contract version (MAJOR.MINOR format)",
     )

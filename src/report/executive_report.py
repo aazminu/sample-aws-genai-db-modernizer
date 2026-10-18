@@ -985,7 +985,9 @@ def _risks(report: dict[str, Any], st: dict[str, ParagraphStyle], names: Any) ->
             )
         )
         flow.append(_para(NO_OPEN_RISKS_CAVEAT, st["small"]))
-    for r in risks:
+    # #950: a LOW risk gets no card here, only the one line after the cards; the
+    # engineering report and the results page list every one.
+    for r in [r for r in risks if severity_of(r) != "LOW"]:
         eng, body = _risk_engine_and_body(r.get("description"))
         level_r = str(r.get("severity") or "-")
         rtype = str(r.get("risk_type") or "").replace("_", " ").lower()
@@ -1009,12 +1011,20 @@ def _risks(report: dict[str, Any], st: dict[str, ParagraphStyle], names: Any) ->
             if m:
                 content.append(_labelled("Mitigation", m, st["small"]))
         flow += [_gap(10), _Panel(content, _severity_color(level_r))]
+    low = int((facts.get("open_risks_by_severity") or {}).get("LOW") or 0)
+    if low:
+        flow += [_gap(10), _para(low_risks_line(low), st["body"])]
     resolved = _resolved_high_lines(report, names)
     if resolved:
         content = [_para(f"{L_RESOLVED}: {resolved_sev}", st["card_title"], GREEN)]
         content += [_para(line, st["body"]) for line in resolved]
         flow += [_gap(10), _Panel(content, GREEN)]
     return flow
+
+
+def low_risks_line(n: int) -> str:
+    """The executive report's one line for its low risks, which get no card (#950)."""
+    return f"{n} low {plural_noun(n, 'risk')}, listed in the engineering report."
 
 
 def _resolved_high_lines(report: dict[str, Any], names: Any) -> list[str]:
