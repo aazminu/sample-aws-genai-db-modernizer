@@ -25,6 +25,7 @@ from src.contracts.analysis_output import (
     AntiPattern,
     Confidence,
     CostEstimate,
+    KeyScopedWrite,
     MigrationComplexity,
     Pattern,
     ScoreBreakdown,
@@ -1426,6 +1427,37 @@ def estimate_dynamodb_costs(
             "No DAX, backups, or global tables included",
         ],
     )
+
+
+# ---------------------------------------------------------------------------
+# Key-scoped writes (the DynamoDB schema designer's input, #1061)
+# ---------------------------------------------------------------------------
+
+
+def key_scoped_writes(collector_output: dict) -> list[KeyScopedWrite]:
+    """Every key-scoped write of the collection and the key it needs (#915, #1061).
+
+    The same engine-neutral ``transaction_shape`` the wide-transaction check and the
+    decision trace read (``query_matches[].transaction_shape.schema_note``), over the
+    whole collection, so the designer is given exactly what routing scored. The
+    analysis contract carries it, so every designer input path (the external request,
+    the Bedrock projection and each group's input) reads the same list."""
+    scope = SourceScope.from_collector(collector_output)
+    keys = SchemaKeys.from_collector(collector_output)
+    out: list[KeyScopedWrite] = []
+    for q in collector_output.get("queries", {}).get("query_patterns", []):
+        shape = transaction_shape(q, scope, keys)
+        if shape is None or shape.schema_note is None or shape.table_id is None:
+            continue
+        out.append(
+            KeyScopedWrite(
+                query_id=str(q.get("query_id") or ""),
+                table_id=shape.table_id,
+                columns=list(shape.anchors),
+                schema_note=shape.schema_note,
+            )
+        )
+    return out
 
 
 # ---------------------------------------------------------------------------

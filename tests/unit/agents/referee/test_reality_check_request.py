@@ -311,7 +311,14 @@ class TestAFlagOnWordpressNeverBringsBackDocumentDB:
     #992 (a table's writes land on one engine): ``4b856e29`` (``UPDATE
     wp_woocommerce_order_itemmeta SET meta_value = ?``) is first-assigned to DynamoDB with
     the table's other write, not to DocumentDB, so DocumentDB first-assigns 27 and the
-    check moves 24 to Aurora MySQL and 3 to DynamoDB."""
+    check moves 24 to Aurora MySQL and 3 to DynamoDB.
+
+    #1061 (a key anchor is also the key of other access patterns on the table): the
+    workload looks ``wp_posts`` up by ``post_type`` and ``post_status``, so six
+    ``wp_posts`` reads by them become key-scoped reads, first-assigned to DocumentDB
+    (74 against Aurora MySQL's 73) instead of an Aurora MySQL tie. DocumentDB
+    first-assigns 33 and the check moves 30 to Aurora MySQL (the six included) and 3 to
+    DynamoDB; ``3a74580e`` is still a DynamoDB move."""
 
     FLAGGED = "3a74580e"
 
@@ -326,7 +333,7 @@ class TestAFlagOnWordpressNeverBringsBackDocumentDB:
         ]
         moved = {q["query_id"]: c["to_engine"] for c in from_documentdb for q in c["moved_queries"]}
         assert sorted(moved.values()).count("dynamodb") == 3
-        assert sorted(moved.values()).count("aurora_mysql") == 24
+        assert sorted(moved.values()).count("aurora_mysql") == 30
         flagged = next(q for q in moved if q.startswith(self.FLAGGED))
         assert moved[flagged] == "dynamodb"
 

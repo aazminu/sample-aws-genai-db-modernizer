@@ -2,6 +2,7 @@
 Analysis Output Contract Models
 
 Version History:
+- 2.2 (2026-10-18): Add KeyScopedWrite model and optional key_scoped_writes field (#1061)
 - 2.1 (2026-03-17): Add AggregateRecommendation model and optional aggregate_recommendations field
 - 2.0 (2026-02-02): Updated to MAJOR.MINOR versioning
 - 1.0 (2026-01-21): Initial version - Output contract for all Analysis agents
@@ -220,11 +221,24 @@ class AggregateRecommendation(BaseModel):
     )
 
 
+class KeyScopedWrite(BaseModel):
+    """A write the analysis found key scoped (ADR-031 Decision 3, #915, #1061): it changes
+    the rows one value of each of ``columns`` addresses, a key anchor that is not a full
+    primary or unique key of ``table_id``. Its schema-design requirement is
+    ``schema_note``: each column must become the partition key of an item collection (or
+    a GSI's) so the write reads its items by key (a Query plus a batch write)."""
+
+    query_id: str
+    table_id: str
+    columns: list[str] = Field(..., min_length=1)
+    schema_note: str
+
+
 class AnalysisOutputContract(BaseModel):
     """Output contract for all Analysis agents"""
 
     contract_version: str = Field(
-        default="2.1",
+        default="2.2",
         pattern=r"^\d+\.\d+$",
         description="Contract version (MAJOR.MINOR format)",
     )
@@ -245,6 +259,13 @@ class AnalysisOutputContract(BaseModel):
     )
     aggregate_recommendations: list[AggregateRecommendation] | None = Field(
         None, description="Optional aggregate recommendations when table aggregates are detected"
+    )
+    key_scoped_writes: list[KeyScopedWrite] | None = Field(
+        None,
+        description=(
+            "DynamoDB analysis only: every key-scoped write and the key it needs (#1061); "
+            "the DynamoDB schema designer reads it"
+        ),
     )
 
     model_config = ConfigDict(use_enum_values=True, extra="ignore")  # Forward compatibility

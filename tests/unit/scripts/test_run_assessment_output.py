@@ -423,10 +423,15 @@ def test_reality_check_status_line_has_the_distribution_for_the_approval_gate(
     # 85.9, Aurora MySQL 81.2), and wp_woocommerce_order_itemmeta's UPDATE joins its
     # other write on DynamoDB (from DocumentDB): aurora_mysql -3, documentdb -1,
     # dynamodb +4.
+    # #1061 (a key anchor is also the key of other access patterns on the table): the
+    # workload looks wp_posts up by post_type and post_status, so six wp_posts reads by
+    # them are key-scoped reads, first-assigned to DocumentDB (74) over an Aurora MySQL
+    # tie (73): aurora_mysql -6, documentdb +6 (the reality check moves all six back to
+    # Aurora MySQL; every moved query is in the #1061 PR).
     assert rc["before_distribution"] == {
         "dynamodb": 36,
-        "aurora_mysql": 43,
-        "documentdb": 27,
+        "aurora_mysql": 37,
+        "documentdb": 33,
         "opensearch": 1,
     }
     assert sum(rc["before_distribution"].values()) == sum(rc["after_distribution"].values())

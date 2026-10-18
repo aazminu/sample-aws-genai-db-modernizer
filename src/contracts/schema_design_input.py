@@ -3,7 +3,7 @@ Schema Design Agent — Input Contract
 
 Defines exactly what the schema design agent receives as validated input.
 This is a projection of CollectorOutputContract (v3.0) and
-AnalysisOutputContract (v2.1) — only the fields the agent actually uses.
+AnalysisOutputContract (v2.2) — only the fields the agent actually uses.
 
 The projection function in this module validates that the full contracts
 can be projected into these models. If validation fails, the schema design
@@ -253,6 +253,15 @@ class AgentAggregateRecommendation(BaseModel):
     combined_migration_complexity: MigrationComplexity
 
 
+class AgentKeyScopedWrite(BaseModel):
+    """A key-scoped write and the key it needs (``analysis_output.KeyScopedWrite``, #1061)."""
+
+    query_id: str
+    table_id: str
+    columns: list[str]
+    schema_note: str
+
+
 # ---------------------------------------------------------------------------
 # Root input contracts
 # ---------------------------------------------------------------------------
@@ -280,6 +289,8 @@ class AgentAnalysisInput(BaseModel):
     anti_patterns_detected: list[AgentAntiPattern] | None = None
     table_recommendations: list[AgentTableRecommendation]
     aggregate_recommendations: list[AgentAggregateRecommendation] | None = None
+    # DynamoDB only: each key-scoped write's partition-key/GSI requirement (#1061).
+    key_scoped_writes: list[AgentKeyScopedWrite] | None = None
 
     model_config = ConfigDict(extra="ignore")
 
@@ -556,6 +567,16 @@ def project_schema_design_input(
                 ),
             )
             for ar in (analysis_output.aggregate_recommendations or [])
+        ]
+        or None,
+        key_scoped_writes=[
+            AgentKeyScopedWrite(
+                query_id=w.query_id,
+                table_id=w.table_id,
+                columns=w.columns,
+                schema_note=w.schema_note,
+            )
+            for w in (analysis_output.key_scoped_writes or [])
         ]
         or None,
     )
