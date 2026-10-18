@@ -358,6 +358,11 @@ Version History:
   ``pending_choice_pairs``, ``auto_decided_choice_count``, ``auto_decided_query_count``
   and ``auto_decided_by_engine`` (``PendingChoicePair``, ``AutoDecidedEngine``). Backward compatible: None,
   0 or empty for a report synthesized before 1.33.
+- 1.37 (2026-10-18, #1034): ``prose_style_rejections``: the model-written
+  schema-design fields synthesis sent back to deterministic text because they
+  used an item of the plain-prose style list (``src.shared.prose_style``), one
+  line each, for the audit trail; no deliverable renders it. Backward
+  compatible: empty for a report written before 1.37.
 """
 
 from datetime import datetime
@@ -1395,7 +1400,7 @@ class SynthesisOutputContract(BaseModel):
     """
 
     contract_version: str = Field(
-        default="1.33",
+        default="1.37",
         pattern=r"^\d+\.\d+$",
         description="Contract version (MAJOR.MINOR format)",
     )
@@ -1425,6 +1430,13 @@ class SynthesisOutputContract(BaseModel):
     summary_validation_warnings: list[str] = Field(
         default_factory=list,
         description="Post-check findings: summary sentences naming a table under the wrong engine",
+    )
+    prose_style_rejections: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Model-written schema-design fields replaced by deterministic text because "
+            "they used an item of the plain-prose style list (#1034); audit only"
+        ),
     )
     recommended_architecture: dict[str, Any] = Field(
         ..., description="Architecture recommendation with type, databases, integrations"

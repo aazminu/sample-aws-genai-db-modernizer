@@ -19969,6 +19969,16 @@
           ]
         }
       },
+      "prose_style_rejections": {
+        "required": false,
+        "schema": {
+          "items": {
+            "kind": "scalar",
+            "type": "string"
+          },
+          "kind": "array"
+        }
+      },
       "query_groups": {
         "required": true,
         "schema": {
@@ -22566,8 +22576,8 @@
         }
       }
     },
-    "schema_hash": "c26b28ebe4ff05df4c540fd260e2a0eb0a06fd8428d09791756f417a81747c0c",
-    "version": "1.33"
+    "schema_hash": "44b9be44081edd773b499da1ba34c75510e92d9bac0f8094a05b23ae2113ff8a",
+    "version": "1.37"
   },
   "triage_output.TriageOutputContract": {
     "fields": {
