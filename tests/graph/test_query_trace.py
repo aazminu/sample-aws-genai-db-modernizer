@@ -802,6 +802,27 @@ class TestSavedGraphFollowsTheAssignment:
         assert (after["final_engine"], after["effective_version"]) == ("aurora_mysql", 3)
         assert builds == ["job", "job"]
 
+    def test_a_failed_refresh_is_not_repeated_by_the_same_read_even_without_backoff(
+        self, served, sample, monkeypatch
+    ):
+        """#848: with no back-off window, one read still builds once (not once to refresh and once to reopen)."""
+        client, files, cache = served  # the fixture sets REBUILD_BACKOFF_S to 0.0
+        qid = _settled_with_runner_up(sample)
+        self._trace(client, qid)
+        builds: list[str] = []
+        real_build = graph_routes._build_graph_file
+        monkeypatch.setattr(
+            graph_routes,
+            "_build_graph_file",
+            lambda db, job, path: builds.append(job) or real_build(db, job, path),
+        )
+        self._customer_edit(files, sample, qid)
+        self.store.fail_reads["wordpress/job/assignment/v3/assignment.json"] = 99
+        assert self._trace(client, qid)["effective_version"] == 2
+        assert builds == ["job"]
+        assert self._trace(client, qid)["effective_version"] == 2
+        assert builds == ["job", "job"]  # one build per read, never two
+
     def test_per_job_tracking_maps_are_bounded(self, served, monkeypatch):
         """#848: _effective_versions, _rebuild_failures and _refresh_locks evict old jobs beyond MAX_TRACKED_JOBS."""
         monkeypatch.setattr(graph_routes, "MAX_TRACKED_JOBS", 4)
