@@ -21,3 +21,10 @@ export const DEFAULT_ENGINE_HEX = '#0972D3';
 // The live UI colour for an engine id -- one lookup for every page, so a new
 // catalog engine reaches all of them with no edit (#482).
 export const engineHex = (engineId) => ENGINE_HEX[engineId] || DEFAULT_ENGINE_HEX;
+
+// The default Cloudscape Badge colour for an engine the palette does not know.
+export const DEFAULT_ENGINE_BADGE_COLOR = 'grey';
+
+// The Cloudscape Badge colour for an engine id -- one lookup for every page,
+// so a new catalog engine reaches all of them with no edit (#1088).
+export const engineBadgeColor = (engineId) => ENGINE_BADGE_COLORS[engineId] || DEFAULT_ENGINE_BADGE_COLOR;

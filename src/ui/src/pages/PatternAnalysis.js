@@ -25,24 +25,13 @@ import SegmentedControl from "@cloudscape-design/components/segmented-control";
 import { SideNavigationConfigurations, ApiConfigurations } from "../config/GlobalConfigurations";
 import AppHeader from "../components/AppHeader";
 import ApiManager from "../classes/ApiManager";
+import { engineBadgeColor } from "../utils/engineColors";
 
 
 
 //--|#######################|
 //--|#######################| Main Page  |#######################
 //--|#######################|
-
-
-
-const ENGINE_COLORS = {
-  dynamodb: 'blue',
-  documentdb: 'green',
-  elasticache: 'red',
-  opensearch: 'grey',
-  neptune: 'red',
-  keyspaces: 'blue',
-  aurora: 'green',
-};
 
 
 
@@ -436,7 +425,7 @@ const PatternAnalysisPage = memo(() => {
               <Box variant="awsui-key-label">{t('pattern-analysis.signal.target-engines')}</Box>
               <SpaceBetween direction="horizontal" size="xs">
                 {(signal.targets || []).map((engine, idx) => (
-                  <Badge key={idx} color={ENGINE_COLORS[engine] || 'grey'}>{engine}</Badge>
+                  <Badge key={idx} color={engineBadgeColor(engine)}>{engine}</Badge>
                 ))}
               </SpaceBetween>
             </Box>
